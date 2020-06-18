@@ -17,9 +17,14 @@ port.on('data', data => console.log(data));
 
 (async () => {
   await wait(100);
+  await write(FOCUS);
+  await drain();
+  await wait(100);
+  await write(SHOOT);
+  await drain();
+  await wait(100);
   await write(IDLE);
   await drain();
   await wait(100);
   await close();
-  await wait(100);
 })();

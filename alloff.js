@@ -1,16 +1,25 @@
-const Gpio = require('onoff').Gpio; //include onoff to interact with the GPIO
+const SerialPort = require('serialport');
+const port = new SerialPort('/dev/ttyACM0', { baudRate: 9600 })
 
-const FOCUS = new Gpio(12, 'out'); //use GPIO pin 4, and specify that it is output
-const SHUTTER = new Gpio(76, 'out'); //use GPIO pin 4, and specify that it is output
-const POWER = new Gpio(200, 'out'); //use GPIO pin 4, and specify that it is output
+const OFF = '6';
+const IDLE = '7';
+const FOCUS = '5';
+const SHOOT = '1'; 
+
 
 const wait = (ms) => new Promise(res => setTimeout(res, ms));
+const write = (data) => new Promise(res => port.write(data, res));
+const drain = () => new Promise(res => port.drain(res));
+const close = () => new Promise(res => port.close(res));
+
+port.on('data', data => console.log(data));
 
 
 (async () => {
-  wait(250);
-  POWER.writeSync(0);
-  FOCUS.writeSync(1);
-  SHUTTER.writeSync(1);
-  wait(250);
+  await wait(100);
+  await write(OFF);
+  await drain();
+  await wait(100);
+  await close();
+  await wait(100);
 })();
