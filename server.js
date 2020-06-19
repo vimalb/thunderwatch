@@ -58,66 +58,71 @@ const launchStream = () => {
 killStream();
 
 
+const STATES = {
+    OFF: 'OFF',
+    IDLE: 'IDLE',
+    BURST: 'BURST'
+}
+var state = STATES.OFF;
+
 const app = express();
 
-app.get('/api/ON', async (req, res) => {
+app.get('/api/state', async (req, res) => {
+    res.send(state);
+});
+
+app.get('/api/action/ON', async (req, res) => {
     console.log(`Turning Camera On`);
     killStream();
     await write(COMMANDS.IDLE);
-    await wait(5000);
+    await wait(3000);
     launchStream();
+    await wait(2000);
+    state = STATES.IDLE;
     res.send("ON");
 });
 
-app.get('/api/OFF', async (req, res) => {
+app.get('/api/action/OFF', async (req, res) => {
     console.log(`Turning Camera Off`);
     killStream();
     await write(COMMANDS.IDLE);
     await wait(5000);
     await write(COMMANDS.OFF);
+    state = STATES.OFF;
     res.send("OFF");
 });
 
-app.get('/api/SHOOT', async (req, res) => {
+app.get('/api/action/SHOOT', async (req, res) => {
     console.log(`Taking Single Shot`);
+    state = STATES.BURST;
     await write(COMMANDS.FOCUS);
     await wait(100);
     await write(COMMANDS.SHOOT);
     await wait(100);
     await write(COMMANDS.IDLE);
+    state = STATES.IDLE;
     res.send("SHOOT");
 });
 
-app.get('/api/BURST', async (req, res) => {
+app.get('/api/action/BURST', async (req, res) => {
     console.log(`Starting Burst`);
     await write(COMMANDS.FOCUS);
     await wait(100);
     await write(COMMANDS.SHOOT);
+    state = STATES.BURST;
     res.send("BURST");
 });
 
-app.get('/api/IDLE', async (req, res) => {
+app.get('/api/action/IDLE', async (req, res) => {
     console.log(`Setting Camera Idle`);
     await write(COMMANDS.IDLE);
+    state = STATES.IDLE;
     res.send("IDLE");
 });
 
 
-app.get('/api/:command', async (req, res) => {
-    console.log(`Running ${req.params.command}`);
-    const command = COMMANDS[req.params.command];
-    await write(command);
-    if(command === COMMANDS.OFF) {
-        killStream();
-    }
-    if(command === COMMANDS.ON) {
-        killStream();
-        await wait(3000);
-        launchStream();
-    }
-    res.send(command);
-});
 
-app.use('/', express.static('frontend'));
+
+app.use('/', express.static('dist'));
 app.listen(3000, '0.0.0.0', () => console.log(`App listening`));
 
